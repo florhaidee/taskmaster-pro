@@ -39,11 +39,71 @@ var loadTasks = function () {
     });
   });
 };
-
+// function saveTasks
 var saveTasks = function () {
   localStorage.setItem("tasks", JSON.stringify(tasks));
 };
-
+// create delete section droppable
+$("#trash").droppable({
+  accept: ".card .list-group-item",
+  tolerance: "touch",
+  drop: function(event, ui) {
+    ui.draggable.remove();
+  },
+  over: function(event, ui) {
+    console.log("over");
+  },
+  out: function(event, ui) {
+    console.log("out");
+  }
+});
+// make the list sortable
+$(".card .list-group").sortable({
+  connectWith: $(".card .list-group"),
+  scroll: false,
+  tolerance: "pointer",
+  helper: "clone",
+  activate: function(event) {
+    console.log("activate", this);
+  },
+  deactivate: function(event) {
+    console.log("deactivate", this);
+  },
+  over: function(event) {
+    console.log("over", event.target);
+  },
+  out: function(event) {
+    console.log("out", event.target);
+  },
+  update: function(event) {
+    // array to store the task data in
+    var tempArr = [];
+    // loop over current set of children in sortable list
+    $(this).children().each(function() {
+      var text = $(this)
+        .find("p")
+        .text()
+        .trim();
+      var date = $(this)
+        .find("span")
+        .text()
+        .trim();
+      // add task data to the temp array as an object
+      tempArr.push({
+        text: text,
+        date: date
+      });
+    });
+    // trim down list's ID to match object property
+    var arrName = $(this)
+    .attr("id")
+    .replace("list-", "");
+    // update array on tasks object and save
+    tasks[arrName] = tempArr;
+    saveTasks();
+    console.log(tempArr);
+  }
+});
 // make tasks editable 
 $(".list-group").on("click", "p", function () {
   var text = $(this)
@@ -126,13 +186,11 @@ $("#task-form-modal").on("show.bs.modal", function () {
   // clear values
   $("#modalTaskDescription, #modalDueDate").val("");
 });
-
 // modal is fully visible
 $("#task-form-modal").on("shown.bs.modal", function () {
   // highlight textarea
   $("#modalTaskDescription").trigger("focus");
 });
-
 // save button in modal was clicked
 $("#task-form-modal .btn-primary").click(function () {
   // get form values
@@ -154,7 +212,6 @@ $("#task-form-modal .btn-primary").click(function () {
     saveTasks();
   }
 });
-
 // remove all tasks
 $("#remove-tasks").on("click", function () {
   for (var key in tasks) {
